@@ -68,7 +68,7 @@ def ask_question():
         # You can add more processing here if needed
         return jsonify({
             'answer': answer,
-            'source': 'Groq LLM API By Sandipan Roy',
+            'source': 'Groq LLM API',
             'focus_area': 'Medical Information'
         })
         
