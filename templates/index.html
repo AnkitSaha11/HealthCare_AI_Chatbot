@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAssist - Medical Q&A Chatbot</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --dark-color: #34495e;
+            --light-color: #ecf0f1;
+            --danger-color: #e74c3c;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: var(--dark-color);
+            background-color: #f9f9f9;
+            height: auto;
+            position: relative;
+            overflow-y: hidden;
+        }
+        
+        .body_img {
+            position: relative;
+            max-width: 100%;
+            max-height: 80%;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .chat-bot-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            overflow: hidden;
+        }
+
+        .chat-bot-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-bot-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .container {
+            display: none;
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+
+        .container.active {
+            display: block;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-container {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            height: 90%;
+            background-color: RGBA(221, 221, 222, 0.7);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #7e7ee2;
+            color: white;
+            padding: 0.7rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-header h2 {
+            font-size: 1.3rem;
+        }
+        
+        .chat-header p {
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        .header-content {
+            flex: 1;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            padding: 0.5rem 1rem;
+            font: 0.8rem sans-serif;
+            border-radius: 5px;
+            max-width: 70%;
+        }
+
+        .user-message {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .bot-message {
+            background-color: var(--light-color);
+        }
+
+        .chat-form {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e6e6e6;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.80rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .send-btn {
+            padding: 0.70rem 1rem;
+            margin-left: 0.5rem;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .send-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .bot-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .bot-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .message-text {
+            flex: 1;
+        }
+
+        .source-info {
+            font-size: 0.8rem;
+            color: #777;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .thinking {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            color: #777;
+            margin-bottom: 1rem;
+        }
+
+        .thinking .dots {
+            display: flex;
+            margin-left: 0.5rem;
+        }
+
+        .thinking .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #777;
+            border-radius: 50%;
+            margin-right: 3px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .thinking .dot:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .thinking .dot:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+        }
+
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .user-container {
+            justify-content: flex-end;
+            width: 100%;
+        }
+
+        .bot-container {
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        /* API Key Setup Styles */
+        .setup-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            background-color: #fff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            display: none;
+        }
+        
+        .setup-container.active {
+            display: block;
+        }
+        
+        .method {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        pre {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .alert {
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .btn {
+            display: inline-block;
+            font-weight: 400;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.25rem;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            color: #fff;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                width: 90%;
+                right: 5%;
+            }
+            .message {
+                max-width: 90%;
+            }
+            .setup-container {
+                width: 90%;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img src="../static/images/main_body.png" class="body_img" />
+    
+    <!-- Bot Icon Button -->
+    <div class="chat-bot-icon" id="chat-bot-icon">
+        <img src="static/images/robot.jpg" alt="MedAssist Bot">
+    </div>
+
+    <!-- Chat Container -->
+    <div class="container" id="chat-container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="header-content">
+                    <h2>MedAssist</h2>
+                    <p>Your AI Medical Assistant</p>
+                </div>
+                <button class="close-chat" id="close-chat">×</button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message-container bot-container">
+                    <div class="bot-icon">
+                        <img src="static/images/bot2.png" alt="MedAssist Bot">
+                    </div>
+                    <div class="message bot-message">
+                        <div class="message-text">
+                            Hello! I'm MR.Medico, your medical assistant. I can answer questions about various medical conditions and treatments. What would you like to know?
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-form">
+                <input type="text" class="chat-input" id="user-input" placeholder="Ask About Your Health..." autocomplete="off">
+                <button class="send-btn" id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Key Setup Container -->
+    <div class="overlay" id="setup-overlay"></div>
+    <div class="setup-container" id="setup-container">
+        <h1 class="mb-4">API Key Setup Guide</h1>
+        <div class="alert alert-warning">
+            <strong>No Groq API key detected!</strong> This application requires a Groq API key to function properly.
+        </div>
+        <p class="mb-4">Follow one of these methods to set up your API key:</p>
+        <div class="method">
+            <h3>Method 1: Create a .env file</h3>
+            <p>Create a file named <code>.env</code> in the root directory of this application with the following content:</p>
+            <pre>GROQ_API_KEY=your_actual_api_key_here</pre>
+            <p><strong>Note:</strong> Make sure the file is named exactly <code>.env</code> (not <code>.env.txt</code>)</p>
+        </div>
+        <div class="method">
+            <h3>Method 2: Set an environment variable</h3>
+            <p>Set the API key as an environment variable in your operating system:</p>
+            
+            <p><strong>For Windows (Command Prompt):</strong></p>
+            <pre>set GROQ_API_KEY=your_actual_api_key_here</pre>
+            
+            <p><strong>For Windows (PowerShell):</strong></p>
+            <pre>$env:GROQ_API_KEY = "your_actual_api_key_here"</pre>
+            
+            <p><strong>For Mac/Linux:</strong></p>
+            <pre>export GROQ_API_KEY=your_actual_api_key_here</pre>
+        </div>
+        <div class="method">
+            <h3>Getting a Groq API Key</h3>
+            <p>If you don't have a Groq API key yet:</p>
+            <ol>
+                <li>Sign up for an account at <a href="https://console.groq.com" target="_blank">console.groq.com</a></li>
+                <li>Navigate to the API keys section</li>
+                <li>Create a new API key</li>
+                <li>Copy the key and use it in one of the methods above</li>
+            </ol>
+        </div>
+        <div class="mt-5">
+            <button class="btn btn-primary" id="close-setup">I've Added My API Key</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            const chatBotIcon = document.getElementById('chat-bot-icon');
+            const chatContainer = document.getElementById('chat-container');
+            const closeChat = document.getElementById('close-chat');
+            const setupContainer = document.getElementById('setup-container');
+            const setupOverlay = document.getElementById('setup-overlay');
+            const closeSetup = document.getElementById('close-setup');
+            
+            // Check if API key is available
+            function checkApiKey() {
+                fetch('/check-api-key')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.api_key_exists) {
+                        setupContainer.classList.add('active');
+                        setupOverlay.classList.add('active');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking API key:', error);
+                    // Assume no API key on error
+                    setupContainer.classList.add('active');
+                    setupOverlay.classList.add('active');
+                });
+            }
+            
+            // Call the check on page load
+            checkApiKey();
+            
+            // Close API key setup when button is clicked
+            closeSetup.addEventListener('click', function() {
+                setupContainer.classList.remove('active');
+                setupOverlay.classList.remove('active');
+                // Re-check the API key
+                checkApiKey();
+            });
+            
+            // Toggle chat window when bot icon is clicked
+            chatBotIcon.addEventListener('click', function() {
+                chatContainer.classList.add('active');
+                // Focus the input field when chat opens
+                setTimeout(() => userInput.focus(), 300);
+            });
+            
+            // Close chat window when close button is clicked
+            closeChat.addEventListener('click', function() {
+                chatContainer.classList.remove('active');
+            });
+        
+            function addMessage(message, isUser = false) {
+                const messageContainer = document.createElement('div');
+                messageContainer.classList.add('message-container');
+                messageContainer.classList.add(isUser ? 'user-container' : 'bot-container');
+
+                if (!isUser) {
+                    const iconDiv = document.createElement('div');
+                    iconDiv.classList.add('bot-icon');
+                    
+                    const iconImg = document.createElement('img');
+                    iconImg.src = 'static/images/bot2.png';
+                    iconImg.alt = 'MedAssist Bot';
+                    iconDiv.appendChild(iconImg);
+                    
+                    messageContainer.appendChild(iconDiv);
+                }
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+                
+                const textDiv = document.createElement('div');
+                textDiv.classList.add('message-text');
+                textDiv.textContent = message;
+                messageDiv.appendChild(textDiv);
+                
+                messageContainer.appendChild(messageDiv);
+                chatMessages.appendChild(messageContainer);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return messageDiv;
+            }
+            
+            function addThinkingAnimation() {
+                const thinkingContainer = document.createElement('div');
+                thinkingContainer.classList.add('message-container', 'bot-container');
+                
+                const iconDiv = document.createElement('div');
+                iconDiv.classList.add('bot-icon');
+                
+                const iconImg = document.createElement('img');
+                iconImg.src = 'static/images/robot.jpg';
+                iconImg.alt = 'MedAssist Bot';
+                iconDiv.appendChild(iconImg);
+                
+                thinkingContainer.appendChild(iconDiv);
+                
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.classList.add('thinking');
+                thinkingDiv.innerHTML = `
+                    Thinking<div class="dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                `;
+                
+                thinkingContainer.appendChild(thinkingDiv);
+                chatMessages.appendChild(thinkingContainer);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return thinkingContainer;
+            }
+
+            function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+
+                // Check API key before sending message
+                fetch('/check-api-key')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.api_key_exists) {
+                        // Show API key setup if no key exists
+                        setupContainer.classList.add('active');
+                        setupOverlay.classList.add('active');
+                        return;
+                    }
+                    
+                    // Add user message
+                    addMessage(message, true);
+                    userInput.value = '';
+
+                    // Add thinking animation
+                    const thinkingDiv = addThinkingAnimation();
+
+                    // Send request to server
+                    fetch('/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ question: message })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Remove thinking animation
+                        chatMessages.removeChild(thinkingDiv);
+                        
+                        console.log("Response data:", data); // Add this for debugging
+
+                        if (data.error) {
+                            addMessage('Sorry, I encountered an error: ' + data.error);
+                            return;
+                        }
+
+                        if (data.answer) {
+                            const botMessageDiv = addMessage(data.answer);
+                            
+                            if (data.source && data.focus_area) {
+                                const sourceInfo = document.createElement('div');
+                                sourceInfo.classList.add('source-info');
+                                sourceInfo.textContent = `Source: ${data.source} | Focus Area: ${data.focus_area}`;
+                                botMessageDiv.appendChild(sourceInfo);
+                            }
+                        } else {
+                            addMessage("I couldn't find an answer to your question. Please try rephrasing or ask another question.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        chatMessages.removeChild(thinkingDiv);
+                        addMessage('Sorry, I encountered a network error. Please check your connection and try again.');
+                    });
+                })
+                .catch(error => {
+                    console.error('Error checking API key:', error);
+                    addMessage('Sorry, I encountered a network error. Please check your connection and try again.');
+                });
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
